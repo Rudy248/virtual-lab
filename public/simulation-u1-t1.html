@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GPU Access Flow - Colab & Kaggle</title>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      /* ... keeping all the existing styles ... */
+      body {
+        font-family: "Arial", sans-serif;
+        background: #ffffff;
+        color: #333333;
+        margin: 0;
+        padding: 2rem;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      h1 {
+        text-align: center;
+        color: #333333;
+        margin-bottom: 2rem;
+      }
+      .platform-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        margin-top: 2rem;
+      }
+      .platform {
+        background: #ffffff;
+        border: 1px solid #ddd;
+        border-radius: 15px;
+        padding: 2rem;
+        position: relative;
+        min-height: 400px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      .step {
+        background: #f8f8f8;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        border-radius: 8px;
+        border: 1px solid #ddd;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+      .step:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      }
+      .step.completed {
+        border-left: 4px solid #61dafb;
+      }
+      .step.active {
+        border-left: 4px solid #ff4d4d;
+      }
+      .colab .step {
+        border-color: #4285f4;
+      }
+      .kaggle .step {
+        border-color: #20beff;
+      }
+      .instruction-box {
+        background: #f0f0f0;
+        color: #333;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-top: 1rem;
+        display: none;
+        animation: slideDown 0.3s ease;
+      }
+      .progress-bar {
+        width: 100%;
+        height: 8px;
+        background: #eee;
+        border-radius: 4px;
+        margin: 1rem 0;
+      }
+      .progress-fill {
+        height: 100%;
+        width: 0;
+        background: linear-gradient(90deg, #61dafb, #4285f4);
+        border-radius: 4px;
+        transition: width 0.5s ease;
+      }
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+      @keyframes slideDown {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .gpu-indicator {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1.2rem;
+      }
+      .reset-btn {
+        display: block;
+        margin: 2rem auto;
+        padding: 0.8rem 2rem;
+        background: #61dafb;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: all 0.3s ease;
+        color: #fff;
+      }
+      .reset-btn:hover {
+        background: #4285f4;
+        transform: scale(1.05);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1><i class="fas fa-microchip"></i> GPU Access Simulator</h1>
+
+      <div class="platform-container">
+        <!-- Google Colab Section -->
+        <div class="platform colab">
+          <h2 style="color: #4285f4">
+            <i class="fab fa-google"></i> Google Colab
+          </h2>
+          <div class="progress-bar">
+            <div class="progress-fill" id="colab-progress"></div>
+          </div>
+
+          <div class="step" onclick="showInstruction(this, 'colab')">
+            <i class="fas fa-file-code"></i> Create New Notebook
+            <span class="gpu-indicator"
+              ><i class="fas fa-microchip"></i> 0/4</span
+            >
+          </div>
+
+          <div class="step" onclick="showInstruction(this, 'colab')">
+            <i class="fas fa-cog"></i> Open Runtime Menu
+            <span class="gpu-indicator"
+              ><i class="fas fa-microchip"></i> 1/4</span
+            >
+          </div>
+
+          <div class="step" onclick="showInstruction(this, 'colab')">
+            <i class="fas fa-tachometer-alt"></i> Change Runtime Type
+            <span class="gpu-indicator"
+              ><i class="fas fa-microchip"></i> 2/4</span
+            >
+          </div>
+
+          <div class="step" onclick="showInstruction(this, 'colab')">
+            <i class="fas fa-check-circle"></i> Select GPU Accelerator
+            <span class="gpu-indicator"
+              ><i class="fas fa-microchip"></i> 3/4</span
+            >
+          </div>
+
+          <div class="instruction-box" id="colab-instructions"></div>
+        </div>
+
+        <!-- Kaggle Section -->
+        <div class="platform kaggle">
+          <h2 style="color: #20beff"><i class="fab fa-kaggle"></i> Kaggle</h2>
+          <div class="progress-bar">
+            <div class="progress-fill" id="kaggle-progress"></div>
+          </div>
+
+          <div class="step" onclick="showInstruction(this, 'kaggle')">
+            <i class="fas fa-plus-square"></i> Create New Notebook
+            <span class="gpu-indicator"
+              ><i class="fas fa-microchip"></i> 0/3</span
+            >
+          </div>
+
+          <div class="step" onclick="showInstruction(this, 'kaggle')">
+            <i class="fas fa-sliders-h"></i> Open Notebook Settings
+            <span class="gpu-indicator"
+              ><i class="fas fa-microchip"></i> 1/3</span
+            >
+          </div>
+
+          <div class="step" onclick="showInstruction(this, 'kaggle')">
+            <i class="fas fa-power-off"></i> Enable GPU Accelerator
+            <span class="gpu-indicator"
+              ><i class="fas fa-microchip"></i> 2/3</span
+            >
+          </div>
+
+          <div class="instruction-box" id="kaggle-instructions"></div>
+        </div>
+      </div>
+
+      <button class="reset-btn" onclick="resetSimulation()">
+        <i class="fas fa-redo"></i> Reset Simulation
+      </button>
+    </div>
+
+    <script>
+      const instructions = {
+        colab: [
+          "Step 1: Open Google Colab by visiting <a href='https://colab.research.google.com' target='_blank' style='color:#61dafb;'>colab.research.google.com</a> and sign in if needed.",
+          "Step 2: Create a new notebook by clicking on <strong>File &gt; New Notebook</strong>.",
+          "Step 3: Open the <strong>Runtime</strong> menu and select <strong>Change runtime type</strong>.",
+          "Step 4: Under <strong>Hardware accelerator</strong>, choose <strong>GPU</strong>, then click <strong>Save</strong>. Your notebook is now configured to use the GPU.",
+        ],
+        kaggle: [
+          "Step 1: Go to <a href='https://www.kaggle.com' target='_blank' style='color:#61dafb;'>kaggle.com</a> and log into your account.",
+          "Step 2: Navigate to your profile and click on <strong>Notebooks</strong> to create a new notebook.",
+          "Step 3: Open the notebook settings and toggle the <strong>GPU Accelerator</strong> option on to enable GPU support.",
+        ],
+      };
+
+      let currentSteps = { colab: 0, kaggle: 0 };
+
+      function showInstruction(element, platform) {
+        const steps = element.parentElement.querySelectorAll(".step");
+        const instructionBox = document.getElementById(
+          `${platform}-instructions`
+        );
+        const progressBar = document.getElementById(`${platform}-progress`);
+
+        const stepIndex = Array.from(steps).indexOf(element);
+        currentSteps[platform] = stepIndex + 1;
+
+        steps.forEach((step, index) => {
+          step.classList.remove("active", "completed");
+          if (index < stepIndex) step.classList.add("completed");
+          if (index === stepIndex) step.classList.add("active");
+        });
+
+        instructionBox.innerHTML = `
+        <h4>${platform === "colab" ? "Google Colab" : "Kaggle"} - Step ${
+          stepIndex + 1
+        } Instructions</h4>
+        <p>${instructions[platform][stepIndex]}</p>
+        ${
+          platform === "colab" && stepIndex === 3
+            ? '<div class="gpu-success"><i class="fas fa-check"></i> GPU Enabled! Your notebook is ready to run GPU-accelerated code.</div>'
+            : ""
+        }
+        ${
+          platform === "kaggle" && stepIndex === 2
+            ? '<div class="gpu-success"><i class="fas fa-check"></i> GPU Enabled! Your notebook is now set up for GPU usage.</div>'
+            : ""
+        }
+      `;
+        instructionBox.style.display = "block";
+
+        const totalSteps = platform === "colab" ? 4 : 3;
+        const progressPercentage = (currentSteps[platform] / totalSteps) * 100;
+        progressBar.style.width = `${progressPercentage}%`;
+      }
+
+      function resetSimulation() {
+        document.querySelectorAll(".step").forEach((step) => {
+          step.classList.remove("active", "completed");
+        });
+        document.querySelectorAll(".instruction-box").forEach((box) => {
+          box.style.display = "none";
+        });
+        document.querySelectorAll(".progress-fill").forEach((bar) => {
+          bar.style.width = "0%";
+        });
+        currentSteps = { colab: 0, kaggle: 0 };
+      }
+    </script>
+  </body>
+</html>

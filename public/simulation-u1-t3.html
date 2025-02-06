@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Universal Container Installation Guide</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+    rel="stylesheet"
+  />
+  <!-- Font Awesome 6.0.0 - using solid icons for clipboard and check-circle -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+  />
+  <style>
+    :root {
+      --primary: #2563eb;
+      --secondary: #3b82f6;
+      --success: #16a34a;
+      --error: #dc2626;
+      --background: #f8fafc;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      margin: 0;
+      padding: 70px 1rem 1rem;
+      background: var(--background);
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .progress-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: var(--background);
+      padding: 0.6rem 1rem;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .step-indicator {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .progress-bar {
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 3px;
+      margin: 0.5rem 0;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      width: 0;
+      transition: width 0.3s ease;
+      border-radius: 3px;
+    }
+
+    .gpu-selector {
+      margin: 0.3rem 0;
+      padding: 0.3rem 0;
+    }
+
+    .step {
+      background: #fff;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1.2rem;
+      margin: 0.8rem 0;
+      transition: 0.3s ease;
+      display: none;
+    }
+
+    .step.active {
+      display: block;
+      border-color: var(--primary);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    .info {
+      background: #e0f7fa;
+      border-left: 4px solid #00acc1;
+      padding: 0.8rem;
+      margin-bottom: 0.8rem;
+      font-size: 0.9rem;
+    }
+
+    .command-box {
+      background: #f1f5f9;
+      padding: 0.8rem;
+      border-radius: 6px;
+      margin: 0.8rem 0;
+      font-family: 'Fira Code', monospace;
+      position: relative;
+      white-space: pre-wrap;
+      text-align: left;
+      line-height: 1.4;
+      font-size: 0.9rem;
+      overflow-x: auto;
+    }
+
+    .command-box pre {
+      margin: 0;
+    }
+
+    .copy-btn {
+      position: absolute;
+      right: 8px;
+      top: 8px;
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid #ddd;
+      padding: 3px 7px;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: 0.2s ease;
+      font-size: 0.8rem;
+    }
+
+    .copy-btn:hover {
+      background: var(--primary);
+      color: white;
+    }
+
+    button {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin: 0.5rem 0.3rem 0 0;
+      transition: 0.2s ease;
+      font-size: 0.85rem;
+    }
+
+    .non-nvidia {
+      display: none;
+    }
+
+    .warning {
+      background: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 0.8rem;
+      margin: 0.8rem 0;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+
+    .checklist {
+      margin: 0.8rem 0;
+      padding-left: 1.2rem;
+      text-align: left;
+    }
+
+    .checklist li {
+      margin: 0.5rem 0;
+      list-style-type: none;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="progress-container">
+    <div class="gpu-selector">
+      <label>
+        <input type="radio" name="gpu-type" value="nvidia" checked /> NVIDIA
+      </label>
+      <label>
+        <input type="radio" name="gpu-type" value="non-nvidia" /> Non-NVIDIA
+      </label>
+    </div>
+    <div class="step-indicator" id="step-indicator">Step 1 of 8</div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress"></div>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Step 1: System Requirements -->
+    <div class="step active" id="step1">
+      <h3>1. System Requirements</h3>
+      <div class="info">
+        Confirm your hardware meets the minimum requirements. Follow the instructions based on your GPU type.
+      </div>
+      <div class="warning">
+        <strong>Tip:</strong> Ensure your OS and GPU drivers are up to date.
+      </div>
+      <div class="nvidia">
+        <div class="command-box">
+          <pre># Check NVIDIA drivers and CUDA toolkit
+nvidia-smi
+nvcc --version</pre>
+          <button class="copy-btn"><i class="fa-solid fa-clipboard"></i></button>
+        </div>
+        <ul class="checklist">
+          <li><i class="fas fa-check"></i> NVIDIA Driver ≥ 450.80.02</li>
+          <li><i class="fas fa-check"></i> CUDA Toolkit ≥ 11.0</li>
+        </ul>
+      </div>
+      <div class="non-nvidia">
+        <div class="command-box">
+          <pre># Verify GPU details
+lspci | grep -i vga
+glxinfo | grep "OpenGL version"</pre>
+          <button class="copy-btn"><i class="fa-solid fa-clipboard"></i></button>
+        </div>
+        <ul class="checklist">
+          <li><i class="fas fa-check"></i> Up-to-date GPU drivers</li>
+          <li><i class="fas fa-check"></i> Vulkan/Mesa support enabled</li>
+        </ul>
+      </div>
+      <button onclick="nextStep()">Next →</button>
+    </div>
+
+    <!-- Step 2: Docker Installation -->
+    <div class="step" id="step2">
+      <h3>2. Docker Installation</h3>
+      <div class="info">
+        Confirm Docker is installed and updated. This step ensures your container runtime is ready.
+      </div>
+      <div class="command-box">
+        <pre># Check Docker version
+docker --version</pre>
+        <button class="copy-btn"><i class="fa-solid fa-clipboard"></i></button>
+      </div>
+      <div class="warning">
+        If Docker is not installed, please follow the official Docker installation guide.
+      </div>
+      <button onclick="prevStep()">← Back</button>
+      <button onclick="nextStep()">Next →</button>
+    </div>
+
+    <!-- Step 3: Docker Configuration -->
+    <div class="step" id="step3">
+      <h3>3. Docker Configuration</h3>
+      <div class="info">
+        Configure Docker for GPU support. Follow the instructions for your selected GPU type.
+      </div>
+      <div class="nvidia">
+        <div class="command-box">
+          <pre># Install NVIDIA Container Toolkit
+sudo apt-get install -y nvidia-container-toolkit
+sudo systemctl restart docker</pre>
+          <button class="copy-btn"><i class="fa-solid fa-clipboard"></i></button>
+        </div>
+      </div>
+      <div class="non-nvidia">
+        <div class="command-box">
+          <pre># Install Mesa Utils for GPU access
+sudo apt-get install -y mesa-utils
+sudo usermod -aG video $USER</pre>
+          <button class="copy-btn"><i class="fa-solid fa-clipboard"></i></button>
+        </div>
+      </div>
+      <button onclick="prevStep()">← Back</button>
+      <button onclick="nextStep()">Next →</button>
+    </div>
+
+    <!-- Step 4: NGC API Key Generation & Usage -->
+    <div class="step" id="step4">
+      <h3>4. NGC API Key Generation & Usage</h3>
+      <div class="info">
+        For NVIDIA users, generate an API key from your NGC account:
+        <br /><br />
+        <strong>To generate your API key:</strong>
+        <ol>
+          <li>Log in to your NGC account at <a href="https://ngc.nvidia.com" target="_blank">ngc.nvidia.com</a>.</li>
+          <li>Go to your account settings and find the API Key section.</li>
+          <li>Click <em>Generate API Key</em> and copy the key provided.</li>
+        </ol>
+        <br />
+        <strong>Using your API key:</strong> First, set your API key as an environment variable, then log in using it.
+      </div>
+      <div class="nvidia">
+        <div class="command-box">
+          <pre># Set your NGC API key as an environment variable
+export NGC_API_KEY=<YOUR_API_KEY></pre>
+          <button class="copy-btn"><i class="fa-solid fa-clipboard"></i></button>
+        </div>
+        <div class="command-box">
+          <pre># Log in to the NVIDIA container registry using your API key
+docker login nvcr.io -u '$oauthtoken' -p $NGC_API_KEY</pre>
+          <button class="copy-btn"><i class="fa-solid fa-clipboard"></i></button>
+        </div>
+      </div>
+      <button onclick="prevStep()">← Back</button>
+      <button onclick="nextStep()">Next →</button>
+    </div>
+
+    <!-- Step 5: Container Setup & Pulling NGC Packages -->
+    <div class="step" id="step5">
+      <h3>5. Container Setup & Pulling NGC Packages</h3>
+      <div class="info">
+        For NVIDIA users, pull specific NGC packages (e.g., TensorRT). For Non‑NVIDIA users, pull a generic base image.
+      </div>
+      <div class="nvidia">
+        <div class="command-box">
+          <pre># Pull a specific NGC package (e.g., TensorRT)
+docker pull nvcr.io/nvidia/tensorrt:21.06-py3</pre>
+          <button class="copy-btn"><i class="fa-solid fa-clipboard"></i></button>
+        </div>
+      </div>
+      <div class="non-nvidia">
+        <div class="command-box">
+          <pre># Pull a base image from Docker Hub
+docker pull ubuntu:latest</pre>
+          <button class="copy-btn"><i class="fa-solid fa-clipboard"></i></button>
+        </div>
+      </div>
+      <div class="command-box">
+        <pre># Run a container with GPU access
+docker run -it --device=/dev/dri:/dev/dri [IMAGE] [COMMAND]</pre>
+        <button class="copy-btn"><i class="fa-solid fa-clipboard"></i></button>
+      </div>
+      <button onclick="prevStep()">← Back</button>
+      <button onclick="nextStep()">Next →</button>
+    </div>
+
+    <!-- Step 6: Verification -->
+    <div class="step" id="step6">
+      <h3>6. Verification</h3>
+      <div class="info">
+        Confirm the container can communicate with the GPU.
+      </div>
+      <div class="nvidia">
+        <div class="command-box">
+          <pre># Run NVIDIA verification
+docker run --gpus all nvidia/cuda:11.0-base nvidia-smi</pre>
+          <button class="copy-btn"><i class="fa-solid fa-clipboard"></i></button>
+        </div>
+      </div>
+      <div class="non-nvidia">
+        <div class="command-box">
+          <pre># Run OpenCL verification
+docker run --device=/dev/dri ubuntu clinfo</pre>
+          <button class="copy-btn"><i class="fa-solid fa-clipboard"></i></button>
+        </div>
+      </div>
+      <button onclick="prevStep()">← Back</button>
+      <button onclick="nextStep()">Next →</button>
+    </div>
+
+    <!-- Step 7: Troubleshooting -->
+    <div class="step" id="step7">
+      <h3>7. Troubleshooting</h3>
+      <div class="info">
+        Review common issues and apply fixes if needed.
+      </div>
+      <ul class="checklist">
+        <li><i class="fas fa-exclamation-triangle"></i> Verify Docker service is running</li>
+        <li><i class="fas fa-exclamation-triangle"></i> Check firewall settings if image pull fails</li>
+        <li><i class="fas fa-exclamation-triangle"></i> Confirm GPU drivers are correctly installed</li>
+      </ul>
+      <div class="command-box">
+        <pre># Restart Docker if needed
+sudo systemctl restart docker</pre>
+        <button class="copy-btn"><i class="fa-solid fa-clipboard"></i></button>
+      </div>
+      <button onclick="prevStep()">← Back</button>
+      <button onclick="nextStep()">Next →</button>
+    </div>
+
+    <!-- Step 8: Final Review & Cleanup -->
+    <div class="step" id="step8">
+      <h3>8. Final Review & Cleanup</h3>
+      <div class="info">
+        Review the installation and run cleanup commands to free resources.
+      </div>
+      <div class="command-box">
+        <pre># Clean up unused Docker resources
+docker system prune -f
+docker image ls
+docker container ls -a</pre>
+        <button class="copy-btn"><i class="fa-solid fa-clipboard"></i></button>
+      </div>
+      <ul class="checklist">
+        <li><i class="fas fa-check"></i> All components are verified</li>
+        <li><i class="fas fa-check"></i> System is ready for production use</li>
+      </ul>
+      <button onclick="prevStep()">← Back</button>
+      <button onclick="nextStep()">Finish Setup</button>
+    </div>
+  </div>
+
+  <script>
+    let currentStep = 1;
+    const totalSteps = 8;
+
+    function updateProgress() {
+      const progress = (currentStep / totalSteps) * 100;
+      document.getElementById('progress').style.width = `${progress}%`;
+      document.getElementById('step-indicator').textContent = `Step ${currentStep} of ${totalSteps}`;
+    }
+
+    // Reset the flow when GPU type is changed
+    function resetFlow() {
+      currentStep = 1;
+      showStep(currentStep);
+    }
+
+    function toggleGPUContent() {
+      const isNVIDIA = document.querySelector('input[name="gpu-type"]:checked').value === 'nvidia';
+      document.querySelectorAll('.nvidia').forEach(el => {
+        el.style.display = isNVIDIA ? 'block' : 'none';
+      });
+      document.querySelectorAll('.non-nvidia').forEach(el => {
+        el.style.display = isNVIDIA ? 'none' : 'block';
+      });
+      resetFlow();
+    }
+
+    function showStep(step) {
+      document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+      const currentEl = document.getElementById(`step${step}`);
+      if (currentEl) {
+        currentEl.classList.add('active');
+      }
+      updateProgress();
+    }
+
+    function nextStep() {
+      if (currentStep < totalSteps) {
+        currentStep++;
+        showStep(currentStep);
+      } else {
+        alert('Installation process completed successfully!');
+      }
+    }
+
+    function prevStep() {
+      if (currentStep > 1) {
+        currentStep--;
+        showStep(currentStep);
+      }
+    }
+
+    document.querySelectorAll('input[name="gpu-type"]').forEach(radio => {
+      radio.addEventListener('change', toggleGPUContent);
+    });
+
+    document.querySelectorAll('.copy-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const cmdBox = e.target.closest('.command-box');
+        const text = cmdBox.querySelector('pre').textContent.trim();
+        navigator.clipboard.writeText(text);
+        // Change the icon to check-circle on success
+        btn.innerHTML = '<i class="fa-solid fa-check-circle"></i>';
+        setTimeout(() => {
+          btn.innerHTML = '<i class="fa-solid fa-clipboard"></i>';
+        }, 2000);
+      });
+    });
+
+    // Initialize
+    toggleGPUContent();
+    showStep(1);
+  </script>
+</body>
+</html>
